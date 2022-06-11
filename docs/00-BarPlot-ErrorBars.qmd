@@ -1,0 +1,243 @@
+---
+title: "Bar Plots with Error Bars"
+format: 
+   html:
+    toc: true
+    code-fold: true
+    code-summary: "Show the code"
+editor: visual
+---
+
+### References:
+
+-   [Rajendra Choure - Grouped bar plot with error bars](https://www.youtube.com/watch?v=-7rpZ_yYpEE&t=11s)\
+-   [Rajendra Choure - Adding data labels](https://www.youtube.com/watch?v=WfeqvyId2sU)
+
+Next: Check out [*Empiracle Cumulative Distribution Function* (ECDF)](https://www.youtube.com/watch?v=iI8RA6fjxNg)
+
+```{r}
+#| echo: false 
+#| message: false
+#| warning: false 
+#| 
+library(tidyverse) 
+library(ggsci) # for color palettes of scieintifc journals
+library(ggpubr) # for theme pubr
+library(ggplot2)
+library(plotly)
+# library(dplyr)
+library(tidyr)
+
+```
+
+```{r}
+
+iris_plot =  gather(iris,FlPrt,Length,1:4)
+
+  iris_plot= group_by(iris_plot, Species,FlPrt)
+
+  iris_plot=summarise(iris_plot,mnL=mean(Length),sdL=sd(Length)) 
+
+iris_plot=  ggplot(iris_plot,aes(reorder(Species,mnL),mnL,fill=reorder(FlPrt,mnL)))+
+  geom_bar(stat="identity",position="dodge")+
+  geom_text(mapping=aes(label=mnL),position=position_dodge(width=0.9),
+            cex=2.5,vjust=-4)+
+  labs(title="Iris: Measurment of floral organs",
+       subtitle="Length abd width of srpal abd petal",
+       x="Species",y="Length ib cm",
+       caption="Data: iris dataset by Edgar Anderson",fill="Description")+
+  geom_errorbar(mapping=aes(ymin=mnL-sdL,ymax=mnL+sdL),
+                width=0.2,position=position_dodge(width=0.9))+
+  theme_classic()+scale_fill_jco()
+```
+
+```{r}
+
+iris_plot <- iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+  
+  ggplot(aes(Species, mnL, fill = FlPrt)) +
+  
+  # identity is required to use values for height of bar,
+  # otherwise, Count is used
+  
+  # Dodge is used to group bar plot, without it you get stacked bar
+  geom_bar(stat = "identity", position = "dodge") 
+   
+iris_plot
+```
+
+### Reorder categories
+
+-   Setosa \> versicolor \> verginica
+
+-   Reorder(categorical Variable, numeric variable)
+
+-   reorder(Species, mnL)
+
+```{r}
+#| fig-cap: "Ordered bar plot"
+iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+  
+  # reorder
+  #  ggplot(aes(Species, mnL, fill = FlPrt))  
+  # first argument is category, second argument is the numeric values
+  ggplot(aes(reorder(Species, mnL), mnL, fill=reorder(FlPrt, mnL))) +
+  
+  # identity is required to use values for height of bar,
+  # otherwise, Count is used
+  
+  # Dodge is used to group bar plot, without it you get stacked bar
+  geom_bar(stat = "identity", position = "dodge") 
+   
+iris_plot
+```
+
+### Add data values to bar
+
+-   map the value to the label attribute\
+
+-   geom_text()
+
+-   geom_text(mapping aes(label=mnL), postition = position_dodge(width = 0.9), cex = 2.5, vjust(= -4) )
+
+```{r}
+#| fig-cap: "Ordered bar plot with geom_text() "
+iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+  
+  # reorder
+  #  ggplot(aes(Species, mnL, fill = FlPrt))  
+  # first argument is category, second argument is the numeric values
+  ggplot(aes(reorder(Species, mnL), mnL, fill=reorder(FlPrt, mnL))) +
+  
+  # identity is required to use values for height of bar,
+  # otherwise, Count is used
+  
+  # Dodge is used to group bar plot, without it you get stacked bar
+  geom_bar(stat = "identity", position = "dodge") +
+  
+  geom_text(mapping = aes(label = mnL), 
+            position = position_dodge(width = 0.9),
+            cex = 2.5, vjust =  -2.5)
+   
+```
+
+### Add titles to plot elements
+
+```{r}
+#| fig-cap: "Ordered bar plot with geom_text() "
+iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+    ggplot(aes(reorder(Species, mnL), mnL, fill=reorder(FlPrt, mnL))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(mapping = aes(label = mnL), 
+            position = position_dodge(width = 0.9),
+            cex = 2.5, vjust =  -2.5) + 
+  labs(title = "Iris: Measurement of floral organs",
+       subtitle = "Length and width of sepal and petal",
+       x = "Species", y = "Length in cm",
+       caption = "Data: iris dataset by Edger Anderson", 
+       fill = "Description")
+
+```
+
+### Add error bars to illustrate uncertainty
+
+-   Add error bars with *geom_errorbar()*\
+
+```{r eval = FALSE, echo=TRUE}
+geom_errorbar(mapping = aes(ymin=mnL-sdL, 
+                              ymax = mnL +sdL),
+                              width = 0.2, 
+                              position = position_dodge(width = 0.9))
+
+```
+
+```{r}
+iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+    ggplot(aes(reorder(Species, mnL), mnL, fill=reorder(FlPrt, mnL))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(mapping = aes(label = mnL), 
+            position = position_dodge(width = 0.9),
+            cex = 2.5, vjust =  -7) + 
+  labs(title = "Iris: Measurement of floral organs",
+       subtitle = "Length and width of sepal and petal",
+       x = "Species", y = "Length in cm",
+       caption = "Data: iris dataset by Edger Anderson", 
+       fill = "Description") + 
+  
+  geom_errorbar(mapping = aes(ymin = mnL - sdL,
+                              ymax = mnL + sdL),
+                width = 0.2,
+                position = position_dodge(width = 0.9))
+  
+```
+
+### Add theme *ggpubr* and color palettes *ggsci*.
+
+-   *library(ggpubr)*
+-   *library(ggsci)*
+
+```{r color-palettes}
+
+library(ggpubr)
+library(ggsci)
+iris %>% 
+  gather(FlPrt, Length, 1:4) %>% 
+  group_by(Species, FlPrt) %>% 
+  summarise(mnL = mean(Length), sdL = sd(Length)) %>% 
+    ggplot(aes(reorder(Species, mnL), mnL, fill=reorder(FlPrt, mnL))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(mapping = aes(label = mnL), 
+            position = position_dodge(width = 0.9),
+            cex = 2.5, vjust =  -7) + 
+  labs(title = "Iris: Measurement of floral organs",
+       subtitle = "Length and width of sepal and petal",
+       x = "Species", y = "Length in cm",
+       caption = "Data: iris dataset by Edger Anderson", 
+       fill = "Description") + 
+  
+  geom_errorbar(mapping = aes(ymin = mnL - sdL,
+                              ymax = mnL + sdL),
+                width = 0.2,
+                position = position_dodge(width = 0.9)) +
+  
+  # themes 
+  # theme_bw()
+  # theme_classic()  
+  
+  # ggpubr::theme_pubr()  
+  
+  # color palettes  
+ 
+  
+  theme_pubr() +
+#  scale_fill_jco() 
+  # scale_fill_npg()  # ***
+  # scale_fill_aaas()
+  # scale_fill_jama()  # ***  
+#  scale_fill_lancet() # *** 
+#  scale_fill_ucscgb() # :( 
+# scale_fill_d3()
+# scale_fill_locuszoom() # :)  
+# scale_fill_igv() # :)  
+# scale_fill_startrek() # :)  
+# scale_fill_futurama() # :)  
+# scale_fill_rickandmorty() # :)  
+scale_fill_simpsons() # :)
+
+
+```
