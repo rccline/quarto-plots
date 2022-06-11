@@ -1,0 +1,110 @@
+---
+title: "Ordering Bar Plots with *reorder()*"
+date: "2022-06-11"
+format: 
+   html:
+    toc: true
+    code-fold: true
+    code-summary: "Show the code"
+editor: visual
+--- 
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false 
+#| 
+library(tidyverse) 
+library(kableExtra)
+library(ggplot2)
+
+```
+
+
+**References**: 
+
+* [Bargraph in R , Arrange bars of barplot using R and GGplot by Rajendra Choure](https://www.youtube.com/watch?v=nQDURKIF4og&list=PLfAzV0jqypOhtjvLvYyMG-6_viNCKLLXP&index=4)  
+
+
+### Create data using rnorm()  
+
+* rorm() syntax:  *rnorm(n, mean, sd)*
+```{r}
+subject <- rep(LETTERS[1:5], each = 20)
+
+# rnorm syntax rnorm(n, mean, sd)
+scores <- c(rnorm(20, 45, 5), rnorm(20, 35, 9), rnorm(20, 45, 3), rnorm(20, 28,5), rnorm(20,31,8)) 
+
+dfs <- scores
+df <- data.frame(subject, scores = round(scores,0))
+
+head(df) %>% 
+ 
+  kbl(caption = "Subject Scores") %>% 
+  kable_classic(full_width = F, html_font = "Cambria", position = "left")  
+  
+```
+
+```{r}
+
+df_sm <- df %>% 
+  group_by(subject) %>% 
+  summarise(mean = mean(scores), sd = sd(scores)) 
+
+df_sm
+```
+
+<br>  
+
+### Plot values using *geom_bar(stat= "identity")*    
+```{r}
+ggplot(df_sm, aes(subject, mean, fill = subject)) +
+  geom_bar(stat = "identity")
+```
+
+
+
+- *geom_bar(stat = "identity")* uses the variable and not the count of the variable.  
+
+- *sd* is included to plot error bars  
+```{r eval = FALSE}
+
+# Question:  Can you use geom_bar for counts ? 
+# Qusetion:  How do you use stat_summary() ? 
+# Question:  How wouldl you show bars as proportion, instead of counts or values?  
+ggplot(df_sm, aes(subject, mean, fill = subject)) +
+ # geom_bar(stat_count())
+  geom_bar(stat = scores)
+geom_bar(inherit.aes = subject)
+```  
+
+<br> 
+
+### Ordering the data makes it easier to see which category is best and worse.  
+
+* Modify *ggplot(df_sm, aes(subject, mean, fill = subject))* 
+* Reorder by *mean*: *aes(reorder(subject, mean), mean, fill = subject))*
+```{r}
+
+ggplot(df_sm, 
+       # reoder by mean 
+       aes(reorder(subject, mean), mean, fill = subject)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean-sd, ymax = mean + sd), width = 0.2) +
+  theme_classic() + 
+  theme(legend.position = "none")
+```
+
+
+To change the order, place -mean
+```{r}
+
+ggplot(df_sm, 
+       # reoder by mean 
+       aes(reorder(subject, -mean), mean, fill = subject)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = mean-sd, ymax = mean + sd), width = 0.2) +
+  theme_classic() + 
+  theme(legend.position = "none")
+```
+
