@@ -1,0 +1,69 @@
+---
+title: "Gantt Charts"
+format: 
+   html:
+    toc: true
+    code-fold: true
+    code-summary: "Show the code"
+editor: visual
+---
+
+### Gannt Chart Functions
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(lubridate)
+library(plotrix)
+```
+
+Gantt charts help one plan and view project development. The *plotrix package* for R provides a way to create Gantt chart with priority coloring. My first attempt at the Gantt chart revealed how tricky it is getting it to work. Rajendra Choure's YouTube tutorial, referenced below, provides the process to create a presentable chart. Rajendra illustrates it is best to take the development, step by step, adding one element at a time and testing each step by rendering the chart.
+
+Because the "time" axis is calculated using *POSIXct values*, the values passed as *POSIXct* values, the values passed as *xlim* must also be *POSIXct*. See the second plot in the examples.
+
+### Resources
+
+[How to make Gantt chart in R? by Rajendra Choure](https://www.youtube.com/watch?v=l2CoYEOrt5s)
+
+[Package *plotrix* Documentation](https://cran.r-project.org/web/packages/plotrix/plotrix.pdf)
+
+-   `?gantt.chart`
+
+### Gantt Chart
+
+Code format:
+
+`gantt.chart(x=NULL, xlim=NULL, taskcolors=NULL, priority.legend=FALSE, vgridpos=NULL, vgridlab=NULL)`
+
+**The first argument is gantt.info**, A list with
+
+-   *task* labels: labels
+
+-   task start date: starts
+
+-   task end date: ends
+
+-   priority levels: priorities
+
+-   *vgridpos* for vertical grid position: data format
+
+-   *vgridlab* for vertical grid labels: character vector
+
+https://tutorial.quarto.org/docs/reference/cells/cells-knitr.html
+
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+library(tidyverse)
+library(lubridate)
+library(plotrix)
+
+
+info2<-list(labels=c("Build Runsheet","Analyze Title","Check Court & Tax Records","Calculate Owner Interests","Build Report", "Prepare Lease Packages"),
+            starts=c(0,5, 10, 11, 15, 19),
+            ends=c(5,10,11,15, 19, 25))
+gantt.chart(info2,vgridlab=1:25,vgridpos=1:25,
+            main="Time line to Run Title & Prepare Lease Packages",taskcolors="lightgray")
+ 
+ 
+```
